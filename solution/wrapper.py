@@ -170,45 +170,23 @@ def verify_and_fix_arithmetic(res: dict, question: str) -> dict:
     if not answer:
         return res
 
-    # Check if answer contains a total amount
-    total_match = re.search(r'(?i)tong\s+cong:\s*([\d.,]+)\s*vnd', answer)
-    
     if not in_stock or not shipping_supported:
-        # Clean any fabricated totals from LLM response (safety first)
-        clean_answer = re.sub(r'(?i).*tong\s+cong.*', '', answer)
-        clean_answer = re.sub(r'(?i).*tong\s+phu.*', '', clean_answer)
-        clean_answer = clean_answer.strip()
-        
-        # Check if the LLM response actually refused the request
-        refuse_keywords = ["xin lỗi", "sorry", "không hỗ trợ", "khong ho tro", "hết hàng", "het hang", "không thể", "khong the", "chưa thể", "chua the", "rat tiec", "rất tiếc", "out of stock"]
-        is_refused = any(kw in clean_answer.lower() for kw in refuse_keywords)
-        
-        if not is_refused or len(clean_answer) < 10:
-            if not in_stock:
-                res["answer"] = "Sản phẩm hiện đã hết hàng hoặc không có sẵn. Không thể thực hiện đặt mua."
-            else:
-                res["answer"] = "Xin lỗi, hiện chúng tôi không hỗ trợ giao hàng đến địa điểm này nên không thể hoàn tất đơn hàng."
+        if not in_stock:
+            res["answer"] = "Sản phẩm hiện đã hết hàng hoặc không đủ số lượng để cung cấp. Rất tiếc không thể thực hiện đơn hàng này."
         else:
-            res["answer"] = clean_answer
+            res["answer"] = "Rất tiếc, hiện chúng tôi không hỗ trợ giao hàng đến địa điểm này nên không thể hoàn tất đơn hàng."
             
     elif price is not None:
         subtotal = price * qty
         discounted = subtotal * (100 - discount) // 100
         expected_total = discounted + shipping
         
-        if total_match:
-            total_in_answer = int(total_match.group(1).replace('.', '').replace(',', ''))
-            if total_in_answer != expected_total:
-                # Correct the total in the final response
-                corrected = re.sub(
-                    r'(?i)tong\s+cong:\s*[\d.,]+\s*vnd',
-                    f"Tong cong: {expected_total} VND",
-                    answer
-                )
-                res["answer"] = corrected
-        elif has_check_stock:
-            # If agent forgot the total but product is in stock, append it
-            res["answer"] = answer.rstrip() + f"\nTong cong: {expected_total} VND"
+        # Clean any existing total lines from the answer to normalize format
+        clean_answer = re.sub(r'(?i).*tong\s+cong.*', '', answer)
+        clean_answer = re.sub(r'(?i).*tong\s+phu.*', '', clean_answer)
+        clean_answer = clean_answer.strip()
+        
+        res["answer"] = clean_answer + f"\nTong cong: {expected_total} VND"
             
     return res
 

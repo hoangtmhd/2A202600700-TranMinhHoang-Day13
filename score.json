@@ -1,21 +1,21 @@
 {
   "team": "2A202600700-TranMinhHoang",
-  "phase": "public",
-  "headline": 94.75,
+  "phase": "private",
+  "headline": 84.29,
   "sub": {
-    "correct": 0.835,
-    "quality": 0.877,
-    "error": 0.9167,
-    "latency": 0.2611,
+    "correct": 0.645,
+    "quality": 0.7667,
+    "error": 0.9375,
+    "latency": 0.2949,
     "cost": 0.0,
-    "drift": 0.7586,
-    "prompt": 0.8454
+    "drift": 0.6835,
+    "prompt": 0.7401
   },
-  "diag_f1": 1.0,
-  "n": 120,
-  "n_correct": 96,
+  "diag_f1": 0.952,
+  "n": 80,
+  "n_correct": 48,
   "judge_mode": "offline",
   "weights_hash": "e81a8ed58d93",
-  "key_hash": "9a800fa6968d",
-  "sig": "2d4ccd9bf33da09abee6c9acc94c1a232eb184cba91ddce991e75044a72fe539"
+  "key_hash": "7e3905b75db0",
+  "sig": "31a08131714982eeadd232d4ae769a4db95d38584c42626154275de3827a3a69"
 }
