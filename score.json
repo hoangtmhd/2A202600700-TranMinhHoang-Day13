@@ -1,0 +1,21 @@
+{
+  "team": "2A202600700-TranMinhHoang",
+  "phase": "public",
+  "headline": 94.75,
+  "sub": {
+    "correct": 0.835,
+    "quality": 0.877,
+    "error": 0.9167,
+    "latency": 0.2611,
+    "cost": 0.0,
+    "drift": 0.7586,
+    "prompt": 0.8454
+  },
+  "diag_f1": 1.0,
+  "n": 120,
+  "n_correct": 96,
+  "judge_mode": "offline",
+  "weights_hash": "e81a8ed58d93",
+  "key_hash": "9a800fa6968d",
+  "sig": "2d4ccd9bf33da09abee6c9acc94c1a232eb184cba91ddce991e75044a72fe539"
+}

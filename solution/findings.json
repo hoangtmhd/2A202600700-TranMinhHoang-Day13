@@ -1,12 +1,106 @@
 {
-  "team": "TODO-team-name",
+  "team": "2A202600700-TranMinhHoang",
   "schema_version": 1,
   "findings": [
     {
       "fault_class": "latency_spike",
-      "evidence": {"metric": "latency_p95_ms", "observed": "TODO from your telemetry", "trace_ids": []},
-      "root_cause": "TODO: what config knob or behavior causes it?",
-      "suggested_fix": "TODO: config change and/or wrapper mitigation"
+      "evidence": {
+        "metric": "latency_p95_ms",
+        "observed": "8998 ms",
+        "trace_ids": []
+      },
+      "root_cause": "High temperature (1.6) causes unstable/verbose outputs, and the lack of result caching leads to redundant API calls.",
+      "suggested_fix": "Lower temperature to 0.2 in config.json and implement thread-safe caching in wrapper.py."
+    },
+    {
+      "fault_class": "error_spike",
+      "evidence": {
+        "metric": "error_rate",
+        "observed": "503 UNAVAILABLE under concurrency",
+        "trace_ids": []
+      },
+      "root_cause": "Concurrent requests from the simulator overload the Gemini API Free Tier rate limit of 15 RPM.",
+      "suggested_fix": "Implement a global thread-safe rate limiting lock inside the retry loop of wrapper.py ensuring 4.5s gap between API calls, and configure exponential backoff retries."
+    },
+    {
+      "fault_class": "pii_leak",
+      "evidence": {
+        "metric": "pii_leak_count",
+        "observed": "raw emails and phone numbers outputted in the answers",
+        "trace_ids": []
+      },
+      "root_cause": "The default system prompt doesn't prevent the agent from repeating sensitive customer contact information in the response.",
+      "suggested_fix": "Enable redact_pii in config.json to scrub emails and phone numbers using a redaction script, and add a rule in prompt.txt prohibiting PII repetition."
+    },
+    {
+      "fault_class": "arithmetic_error",
+      "evidence": {
+        "metric": "incorrect_totals",
+        "observed": "agent computes wrong total amounts and discounts",
+        "trace_ids": []
+      },
+      "root_cause": "The agent makes calculation errors under high temperature and lacks structured formulas for discounts and shipping.",
+      "suggested_fix": "Lower temperature to 0.2 in config.json, write explicit math formulas in prompt.txt, and implement automated arithmetic correction in wrapper.py based on tool execution traces."
+    },
+    {
+      "fault_class": "fabrication",
+      "evidence": {
+        "metric": "fabricated_totals",
+        "observed": "agent invents total prices for out-of-stock items and unsupported shipping locations",
+        "trace_ids": []
+      },
+      "root_cause": "The agent doesn't check item availability or shipping limitations before finalizing order details and fabricating prices.",
+      "suggested_fix": "Add strict prompt rules in prompt.txt to refuse orders immediately when tools return errors or out-of-stock, and implement fallback refuse logic in wrapper.py."
+    },
+    {
+      "fault_class": "tool_failure",
+      "evidence": {
+        "metric": "tool_errors",
+        "observed": "tool parameters fail due to Vietnamese diacritic character mismatches and catalog override",
+        "trace_ids": []
+      },
+      "root_cause": "Vietnamese city names containing diacritics cause unicode mismatches in tool calls, and catalog_override forces incorrect MacBook stock status.",
+      "suggested_fix": "Enable normalize_unicode in config.json, clear catalog_override, and normalize unicode strings before tool execution."
+    },
+    {
+      "fault_class": "cost_blowup",
+      "evidence": {
+        "metric": "cost_usd",
+        "observed": "High cost per session due to premium model tier and excessive tokens",
+        "trace_ids": []
+      },
+      "root_cause": "The default configuration sets model_price_tier to premium, verbose_system to true, and has a large context_size, multiplying token cost.",
+      "suggested_fix": "Change model_price_tier to standard or free in config.json, set verbose_system to false, and reduce context_size."
+    },
+    {
+      "fault_class": "quality_drift",
+      "evidence": {
+        "metric": "session_drift_rate",
+        "observed": "Degradation of answer accuracy and format conformance in later turns of a session",
+        "trace_ids": []
+      },
+      "root_cause": "A non-zero session_drift_rate causes the agent's behavior and system instruction adherence to decay over multiple turns.",
+      "suggested_fix": "Set session_drift_rate to 0 in config.json and use self_consistency or caching to stabilize responses."
+    },
+    {
+      "fault_class": "infinite_loop",
+      "evidence": {
+        "metric": "repeated_tool_calls",
+        "observed": "Agent repeatedly calls check_stock in an infinite loop for the same query, reaching max steps",
+        "trace_ids": []
+      },
+      "root_cause": "With loop_guard disabled in config.json, the agent lacks a mechanism to detect and stop duplicate tool calls, resulting in max_steps exhaustion.",
+      "suggested_fix": "Enable loop_guard: true in config.json."
+    },
+    {
+      "fault_class": "tool_overuse",
+      "evidence": {
+        "metric": "tool_calls_count",
+        "observed": "Agent calls check_stock or get_discount multiple times per request when it only needs to call them once",
+        "trace_ids": []
+      },
+      "root_cause": "Unlimited tool budget (tool_budget: 0) and lack of budget constraints permit the LLM to invoke tools unnecessarily.",
+      "suggested_fix": "Configure tool_budget to 4 in config.json and instruct the agent in prompt.txt to only invoke each tool at most once."
     }
   ]
 }
